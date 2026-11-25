@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ЦВЕТ-ЦИФРА</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+h1 {
+  margin: 0 0 20px 0;
+  font-size: 26px;
+  text-align: center;
+}
+
+.board {
+  background: #1c1c1c;
+  padding: 20px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.label {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.top-card {
+  font-size: 42px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.card {
+  width: 70px;
+  height: 100px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+.red {
+  background: #e53935;
+}
+
+.green {
+  background: #43a047;
+}
+
+.blue {
+  background: #1e88e5;
+}
+
+.yellow {
+  background: #fdd835;
+  color: #000;
+}
+
+.wild {
+  background: linear-gradient(45deg, #e53935, #43a047, #1e88e5, #fdd835);
+}
+
+button {
+  margin-top: 25px;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 12px;
+  background: #2979ff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1565c0;
+}
+
+.status {
+  margin-top: 15px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+</style>
+</head>
+<body>
+
+<h1>🃏 ЦВЕТ-ЦИФРА</h1>
+
+<div class="board">
+  <div class="label">Поточна карта:</div>
+  <div class="top-card" id="topCard">🟡 7</div>
+
+  <div class="label">Твоя рука:</div>
+  <div class="hand" id="hand"></div>
+
+  <button onclick="drawCard()">🃏 Взяти карту</button>
+
+  <div class="status" id="status">
+    Натисни на карту, щоб зіграти нею.
+  </div>
+</div>
+
+<script>
+const hand = [
+  {color: "red", value: "5"},
+  {color: "green", value: "7"},
+  {color: "blue", value: "draw2"},
+  {color: "yellow", value: "skip"},
+  {color: "wild", value: "wild"},
+];
+
+let topCard = {color: "yellow", value: "7"};
+
+function cardText(card) {
+  if (card.value === "skip") return "⏭";
+  if (card.value === "reverse") return "🔄";
+  if (card.value === "draw2") return "+2";
+  if (card.value === "wild") return "🌈";
+  if (card.value === "wild_draw4") return "🌈+4";
+  return card.value;
+}
+
+function renderTopCard() {
+  const el = document.getElementById("topCard");
+  el.textContent = cardText(topCard);
+  el.className = "top-card " + topCard.color;
+}
+
+function renderHand() {
+  const container = document.getElementById("hand");
+  container.innerHTML = "";
+
+  hand.forEach((card, index) => {
+    const div = document.createElement("div");
+    div.className = "card " + card.color;
+    div.textContent = cardText(card);
+
+    div.onclick = () => playCard(index);
+
+    container.appendChild(div);
+  });
+}
+
+function playCard(index) {
+  const card = hand[index];
+
+  const canPlay =
+    card.color === topCard.color ||
+    card.value === topCard.value ||
+    card.color === "wild";
+
+  if (!canPlay) {
+    document.getElementById("status").textContent =
+      "Цю карту не можна класти.";
+    return;
+  }
+
+  topCard = card;
+  hand.splice(index, 1);
+
+  renderTopCard();
+  renderHand();
+
+  document.getElementById("status").textContent =
+    "Ти зіграв карту: " + cardText(card);
+}
+
+function drawCard() {
+  const colors = ["red", "green", "blue", "yellow"];
+  const values = ["0","1","2","3","4","5","6","7","8","9"];
+
+  const newCard = {
+    color: colors[Math.floor(Math.random() * colors.length)],
+    value: values[Math.floor(Math.random() * values.length)]
+  };
+
+  hand.push(newCard);
+  renderHand();
+
+  document.getElementById("status").textContent =
+    "Ти взяв карту: " + cardText(newCard);
+}
+
+renderTopCard();
+renderHand();
+</script>
+
+</body>
+</html>
