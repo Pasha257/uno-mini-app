@@ -3,51 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЦВЕТ-ЦИФРА</title>
+<title>UNO</title>
 
 <style>
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
   font-family: Arial, sans-serif;
-  background: #0f0f0f;
+  background: #101820;
   color: #fff;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  min-height: 100vh;
 }
 
 h1 {
-  margin: 0 0 20px 0;
-  font-size: 26px;
+  font-size: 28px;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+.menu {
+  width: 100%;
+  max-width: 420px;
+  background: #16202b;
+  border-radius: 24px;
+  padding: 30px 20px;
   text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.menu button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 16px;
+  font-size: 18px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.play-bot {
+  background: #2979ff;
+  color: #fff;
+}
+
+.find-player {
+  background: #43a047;
+  color: #fff;
 }
 
 .board {
-  background: #1c1c1c;
-  padding: 20px;
-  border-radius: 20px;
+  display: none;
   width: 100%;
   max-width: 420px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  background: #16202b;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
-.label {
-  font-size: 14px;
-  opacity: 0.7;
-  margin-bottom: 10px;
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.top-card {
-  font-size: 42px;
+.pile {
+  width: 90px;
+  height: 130px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
   font-weight: bold;
-  margin: 20px 0;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.deck {
+  background: #1f2933;
+  color: #fff;
+  border: 2px dashed #4a5568;
+}
+
+.discard {
+  background: #fdd835;
+  color: #000;
 }
 
 .hand {
@@ -59,39 +108,27 @@ h1 {
 }
 
 .card {
-  width: 70px;
-  height: 100px;
+  width: 72px;
+  height: 108px;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 30px;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.2s;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  transition: transform 0.15s;
 }
 
 .card:hover {
-  transform: scale(1.05);
+  transform: translateY(-6px);
 }
 
-.red {
-  background: #e53935;
-}
-
-.green {
-  background: #43a047;
-}
-
-.blue {
-  background: #1e88e5;
-}
-
-.yellow {
-  background: #fdd835;
-  color: #000;
-}
-
+.red { background: #e53935; }
+.green { background: #43a047; }
+.blue { background: #1e88e5; }
+.yellow { background: #fdd835; color: #000; }
 .wild {
   background: linear-gradient(45deg, #e53935, #43a047, #1e88e5, #fdd835);
 }
@@ -107,26 +144,46 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  background: #1565c0;
-}
-
 .status {
   margin-top: 15px;
   font-size: 14px;
   opacity: 0.8;
+  text-align: center;
 }
 </style>
 </head>
 <body>
 
-<h1>🃏 ЦВЕТ-ЦИФРА</h1>
+<h1>🃏 UNO</h1>
 
-<div class="board">
-  <div class="label">Поточна карта:</div>
-  <div class="top-card" id="topCard">🟡 7</div>
+<div class="menu" id="menu">
+  <h2>Обери режим</h2>
 
-  <div class="label">Твоя рука:</div>
+  <button class="play-bot" onclick="startBotGame()">
+    🤖 Грати з ботом
+  </button>
+
+  <button class="find-player" onclick="findPlayer()">
+    🔍 Знайти суперника
+  </button>
+</div>
+
+<div class="board" id="board">
+  <div class="row">
+    <div class="pile deck" onclick="drawCard()">
+      🃏
+    </div>
+
+    <div>
+      <div style="font-size:14px; opacity:0.7;">Поточна карта</div>
+      <div class="pile discard" id="topCard">7</div>
+    </div>
+  </div>
+
+  <div style="font-size:14px; opacity:0.7; margin-bottom:10px;">
+    Твоя рука
+  </div>
+
   <div class="hand" id="hand"></div>
 
   <button onclick="drawCard()">🃏 Взяти карту</button>
@@ -137,15 +194,43 @@ button:hover {
 </div>
 
 <script>
-const hand = [
-  {color: "red", value: "5"},
-  {color: "green", value: "7"},
-  {color: "blue", value: "draw2"},
-  {color: "yellow", value: "skip"},
-  {color: "wild", value: "wild"},
-];
+let mode = null;
+let hand = [];
+let botHand = [];
+let deck = [];
+let topCard = null;
+let playerTurn = true;
 
-let topCard = {color: "yellow", value: "7"};
+const colors = ["red", "green", "blue", "yellow"];
+const values = ["0","1","2","3","4","5","6","7","8","9"];
+
+function createDeck() {
+  const deck = [];
+
+  for (const color of colors) {
+    deck.push({color, value: "0"});
+
+    for (const value of values.slice(1)) {
+      deck.push({color, value});
+      deck.push({color, value});
+    }
+
+    for (const value of ["skip", "reverse", "draw2"]) {
+      deck.push({color, value});
+      deck.push({color, value});
+    }
+  }
+
+  for (let i = 0; i < 4; i++) {
+    deck.push({color: "wild", value: "wild"});
+  }
+
+  for (let i = 0; i < 4; i++) {
+    deck.push({color: "wild", value: "wild_draw4"});
+  }
+
+  return deck.sort(() => Math.random() - 0.5);
+}
 
 function cardText(card) {
   if (card.value === "skip") return "⏭";
@@ -156,10 +241,18 @@ function cardText(card) {
   return card.value;
 }
 
+function canPlay(card) {
+  return (
+    card.color === topCard.color ||
+    card.value === topCard.value ||
+    card.color === "wild"
+  );
+}
+
 function renderTopCard() {
   const el = document.getElementById("topCard");
   el.textContent = cardText(topCard);
-  el.className = "top-card " + topCard.color;
+  el.className = "pile discard " + topCard.color;
 }
 
 function renderHand() {
@@ -177,15 +270,48 @@ function renderHand() {
   });
 }
 
+function startBotGame() {
+  mode = "bot";
+
+  deck = createDeck();
+
+  hand = [];
+  botHand = [];
+
+  for (let i = 0; i < 7; i++) {
+    hand.push(deck.pop());
+    botHand.push(deck.pop());
+  }
+
+  topCard = deck.pop();
+
+  playerTurn = true;
+
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("board").style.display = "block";
+
+  renderTopCard();
+  renderHand();
+
+  document.getElementById("status").textContent =
+    "Твій хід.";
+}
+
+function findPlayer() {
+  document.getElementById("status").textContent =
+    "🔍 Пошук суперника...";
+}
+
 function playCard(index) {
+  if (!playerTurn) {
+    document.getElementById("status").textContent =
+      "Зараз хід бота.";
+    return;
+  }
+
   const card = hand[index];
 
-  const canPlay =
-    card.color === topCard.color ||
-    card.value === topCard.value ||
-    card.color === "wild";
-
-  if (!canPlay) {
+  if (!canPlay(card)) {
     document.getElementById("status").textContent =
       "Цю карту не можна класти.";
     return;
@@ -197,28 +323,111 @@ function playCard(index) {
   renderTopCard();
   renderHand();
 
+  if (hand.length === 0) {
+    document.getElementById("status").textContent =
+      "🏆 Ти переміг!";
+    return;
+  }
+
+  if (card.value === "draw2") {
+    for (let i = 0; i < 2; i++) {
+      botHand.push(deck.pop());
+    }
+
+    document.getElementById("status").textContent =
+      "Ти зіграв +2. Бот пропускає хід.";
+    return;
+  }
+
+  if (card.value === "wild_draw4") {
+    for (let i = 0; i < 4; i++) {
+      botHand.push(deck.pop());
+    }
+
+    document.getElementById("status").textContent =
+      "Ти зіграв +4. Бот пропускає хід.";
+    return;
+  }
+
+  playerTurn = false;
   document.getElementById("status").textContent =
-    "Ти зіграв карту: " + cardText(card);
+    "Хід бота...";
+
+  setTimeout(botMove, 1000);
+}
+
+function botMove() {
+  const playable = botHand.filter(card => canPlay(card));
+
+  if (playable.length > 0) {
+    const card = playable[0];
+    const index = botHand.indexOf(card);
+
+    botHand.splice(index, 1);
+    topCard = card;
+
+    renderTopCard();
+
+    if (botHand.length === 0) {
+      document.getElementById("status").textContent =
+        "💀 Бот переміг.";
+      return;
+    }
+
+    if (card.value === "draw2") {
+      for (let i = 0; i < 2; i++) {
+        hand.push(deck.pop());
+      }
+
+      document.getElementById("status").textContent =
+        "Бот зіграв +2. Ти пропускаєш хід.";
+      return;
+    }
+
+    if (card.value === "wild_draw4") {
+      for (let i = 0; i < 4; i++) {
+        hand.push(deck.pop());
+      }
+
+      document.getElementById("status").textContent =
+        "Бот зіграв +4. Ти пропускаєш хід.";
+      return;
+    }
+
+    playerTurn = true;
+    document.getElementById("status").textContent =
+      "Твій хід.";
+  } else {
+    if (deck.length > 0) {
+      botHand.push(deck.pop());
+    }
+
+    playerTurn = true;
+    document.getElementById("status").textContent =
+      "Бот взяв карту. Твій хід.";
+  }
 }
 
 function drawCard() {
-  const colors = ["red", "green", "blue", "yellow"];
-  const values = ["0","1","2","3","4","5","6","7","8","9"];
+  if (!playerTurn) {
+    document.getElementById("status").textContent =
+      "Зараз хід бота.";
+    return;
+  }
 
-  const newCard = {
-    color: colors[Math.floor(Math.random() * colors.length)],
-    value: values[Math.floor(Math.random() * values.length)]
-  };
+  if (deck.length > 0) {
+    hand.push(deck.pop());
+  }
 
-  hand.push(newCard);
   renderHand();
 
   document.getElementById("status").textContent =
-    "Ти взяв карту: " + cardText(newCard);
-}
+    "Ти взяв карту.";
 
-renderTopCard();
-renderHand();
+  playerTurn = false;
+
+  setTimeout(botMove, 1000);
+}
 </script>
 
 </body>
